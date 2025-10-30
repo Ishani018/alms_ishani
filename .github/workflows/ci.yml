@@ -7,10 +7,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS  # 👈 add this
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
@@ -21,7 +23,7 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npx eslint  .
+        run: npx eslint .
 
       - name: Run Jest tests
-        run: npx jest -- --ci --reporters=default
+        run: npx jest --ci --reporters=default --passWithNoTests

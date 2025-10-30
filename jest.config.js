@@ -1,5 +1,9 @@
 // jest.config.js
 module.exports = {
-  testMatch: ["**/tests/**/*.test.js"], // where your unit tests are
+  testMatch: [
+    "**/tests/**/*.test.js",
+    "**/tests/**/*.spec.js",
+  ],
   testEnvironment: "node",
+  roots: ["<rootDir>/tests"], // 👈 ensures Jest starts in /tests
 };

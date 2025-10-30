@@ -3,6 +3,14 @@ import globals from "globals";
 
 
 export default [
-  { files: ["**/*.{js,mjs,cjs}"], plugins: { js }, extends: ["js/recommended"], languageOptions: { globals: globals.browser } },
+  ...js.configs.recommended.map(config => ({
+    ...config,
+    files: ["**/*.{js,mjs,cjs}"],
+    plugins: { js },
+    languageOptions: { 
+      ...(config.languageOptions || {}),
+      globals: globals.browser
+    }
+  })),
   { files: ["**/*.js"], languageOptions: { sourceType: "commonjs" } },
 ];

@@ -21,7 +21,7 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npm run lint
+        run: npx eslint --no-eslintrc .
 
       - name: Run Jest tests
-        run: npm test -- --ci --reporters=default
+        run: npx jest -- --ci --reporters=default

@@ -1,3 +1,6 @@
+![Build Status](https://github.com/pestechnology/PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS/actions/workflows/ci.yml/badge.svg)
+
+
 # Automated Leave Management System
 
 **Project ID:** P12  

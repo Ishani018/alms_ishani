@@ -1,16 +1,16 @@
 import js from "@eslint/js";
 import globals from "globals";
 
-
 export default [
-  ...js.configs.recommended.map(config => ({
-    ...config,
+  {
+    ...js.configs.recommended,
     files: ["**/*.{js,mjs,cjs}"],
-    plugins: { js },
-    languageOptions: { 
-      ...(config.languageOptions || {}),
-      globals: globals.browser
-    }
-  })),
-  { files: ["**/*.js"], languageOptions: { sourceType: "commonjs" } },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        ...globals.jest, // ✅ Added Jest globals here
+      },
+    },
+  },
 ];

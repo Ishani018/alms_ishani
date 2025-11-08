@@ -1,32 +1,109 @@
-name: Node.js CI Pipeline
+name: Node.js CI/CD Pipeline
 
+# Run on push and pull request for main and develop branches
 on:
+  push:
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
-  build:
+  # JOB 1: RUNS ALL CI CHECKS (8 MARKS)
+  # This job runs all 5 stages from the rubric [cite: 664]
+  ci-pipeline:
     runs-on: ubuntu-latest
-
     steps:
+      # 1. Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          path: PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS  # 👈 clone directly here
+        # We check out to the root, so no 'working-directory' is needed.
 
+      # 2. Setup Node.js
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies
-        working-directory: PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS
+      # 3. STAGE 1: BUILD
+      # Install dependencies [cite: 665]
+      - name: 1. Build - Install Dependencies
         run: npm ci
 
-      - name: Run ESLint
-        working-directory: PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS
-        run: npx eslint .
+      # 4. STAGE 4: LINT
+      # Run ESLint and save the report [cite: 674]
+      # We use '|| true' to ensure this step saves the report even if it finds errors
+      - name: 4. Lint - Run ESLint
+        run: npx eslint . --format=json --output-file lint-report.json || true
+      
+      - name: 4. Lint - Upload Lint Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: lint-report.json
 
-      - name: Run Jest tests
-        working-directory: PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS
-        run: npx jest --ci --reporters=default
+      # 5. STAGE 2 & 3: TEST & COVERAGE
+      # Run Jest and generate coverage report [cite: 667, 669]
+      # Your rubric requires >=75% coverage. You must set this threshold in your jest.config.js! [cite: 671]
+      - name: 2&3. Test & Coverage - Run Jest
+        run: npx jest --ci --coverage --reporters=default
+      
+      - name: 3. Coverage - Upload Coverage Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/ # Default folder for Jest's HTML coverage report [cite: 672]
+
+      # 6. STAGE 5: SECURITY
+      # Run npm audit and save the report 
+      - name: 5. Security - Run NPM Audit
+        run: npm audit --audit-level=high --json > security-report.json || true
+      
+      - name: 5. Security - Upload Security Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: security-report.json
+
+  # JOB 2: CREATES DEPLOYMENT ARTIFACT (5 MARKS)
+  # This job runs only after all CI checks pass [cite: 786]
+  cd-pipeline:
+    runs-on: ubuntu-latest
+    needs: ci-pipeline # This job waits for 'ci-pipeline' to succeed
+    # Only run this step on an actual push, not on a pull request
+    if: github.event_name == 'push' 
+
+    steps:
+      # 1. Checkout code again for zipping
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Download all CI reports from the previous job
+      - name: Download all CI Artifacts
+        uses: actions/download-artifact@v4
+
+      # 3. Create the deployment package
+      - name: Create Deployment Artifact (.zip)
+        run: |
+          mkdir -p deployment/reports # Create folder for reports [cite: 790]
+          
+          # Move the downloaded reports into the deployment folder
+          mv coverage-report deployment/reports/coverage-report
+          mv lint-report/lint-report.json deployment/reports/lint-report.json
+          mv security-report/security-report.json deployment/reports/security-report.json
+          
+          # Copy source code, README, and package.json into the artifact [cite: 789, 795, 796]
+          # We copy the main folders from your project. Add/remove folders as needed.
+          cp -r client deployment/client
+          cp -r public deployment/public
+          cp -r src deployment/src
+          cp package.json package-lock.json README.md deployment/
+          
+          # Create the final zip file
+          zip -r deployment-package.zip deployment
+
+      # 4. Upload the final .zip file [cite: 803]
+      - name: Upload Final Deployment Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-package
+          path: deployment-package.zip

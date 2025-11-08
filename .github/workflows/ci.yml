@@ -1,0 +1,32 @@
+name: Node.js CI Pipeline
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS  # 👈 clone directly here
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS
+        run: npx eslint .
+
+      - name: Run Jest tests
+        working-directory: PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS
+        run: npx jest --ci --reporters=default

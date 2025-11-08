@@ -6,9 +6,9 @@ on:
   pull_request:
     branches: [ main, develop ]
 
-jobs: # <--- THIS IS THE 'jobs' KEY THAT WAS MISSING ON LINE 4
-
+jobs:
   # JOB 1: BUILD (Stage 1)
+  # This job just checks that the project builds
   build:
     runs-on: ubuntu-latest
     steps:
@@ -20,15 +20,9 @@ jobs: # <--- THIS IS THE 'jobs' KEY THAT WAS MISSING ON LINE 4
         with:
           node-version: 20
       
+      # We just run install here to make sure it works
       - name: 1. Build - Install Dependencies
         run: npm ci
-      
-      # We save the installed modules to pass to other jobs
-      - name: Archive node_modules
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
 
   # JOB 2: LINT (Stage 4)
   # Runs in parallel with Test and Security
@@ -44,12 +38,9 @@ jobs: # <--- THIS IS THE 'jobs' KEY THAT WAS MISSING ON LINE 4
         with:
           node-version: 20
       
-      # Get the saved modules from the 'build' job
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
+      # FIX: Install dependencies fresh in this job
+      - name: Install Dependencies
+        run: npm ci
           
       - name: 4. Lint - Run ESLint
         run: npx eslint . --format=json --output-file lint-report.json || true
@@ -74,11 +65,9 @@ jobs: # <--- THIS IS THE 'jobs' KEY THAT WAS MISSING ON LINE 4
         with:
           node-version: 20
           
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
+      # FIX: Install dependencies fresh in this job
+      - name: Install Dependencies
+        run: npm ci
           
       - name: 2&3. Test & Coverage - Run Jest
         run: npx jest --ci --coverage --reporters=default
@@ -103,11 +92,9 @@ jobs: # <--- THIS IS THE 'jobs' KEY THAT WAS MISSING ON LINE 4
         with:
           node-version: 20
           
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
+      # FIX: Install dependencies fresh in this job
+      - name: Install Dependencies
+        run: npm ci
           
       - name: 5. Security - Run NPM Audit
         run: npm audit --audit-level=high --json > security-report.json || true
@@ -142,7 +129,7 @@ jobs: # <--- THIS IS THE 'jobs' KEY THAT WAS MISSING ON LINE 4
           mv coverage-report deployment/reports/coverage-report
           mv security-report/security-report.json deployment/reports/
           
-          # Copy the entire client folder (which has public/ and src/ inside)
+          # Copy the entire client folder
           cp -r client deployment/client
           
           # Copy the tests folder

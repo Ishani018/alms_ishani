@@ -1,0 +1,22 @@
+{
+  "name": "pesu_rr_cse_e_p12_automated_leave_management_system_alms",
+  "version": "1.0.0",
+  "description": "Project ID: P12 | Course: UE23CS341A | Academic Year: 2025 | Semester: 5th Sem | Campus: RR | Branch: CSE-E",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+  "eslint": "^9.8.0",
+  "@eslint/js": "^9.8.0",
+  "globals": "^15.8.0",
+  "jest": "^30.2.0"
+}
+}

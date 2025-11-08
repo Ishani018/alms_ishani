@@ -51,7 +51,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          [cite_start]path: coverage/ # Default folder for Jest's HTML coverage report [cite: 672]
+          path: coverage/ # Default folder for Jest's HTML coverage report [cite: 672]
 
       # 6. STAGE 5: SECURITY
       # Run npm audit and save the report 

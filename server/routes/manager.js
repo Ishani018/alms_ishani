@@ -36,7 +36,8 @@ router.put('/request/:id', [authMiddleware, managerMiddleware], async (req, res)
         await request.save();
         res.json(request);
     } catch (err) {
-        console.error(err.message);
+        // After
+        console.error(`Error updating request ${req.params.id}: ${err.message}`);
         res.status(500).send('Server Error');
     }
 });

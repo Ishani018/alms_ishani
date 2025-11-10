@@ -7,8 +7,8 @@ on:
     branches: [ main, develop ]
 
 jobs:
+
   # JOB 1: BUILD (Stage 1)
-  # This job just checks that the project builds
   build:
     runs-on: ubuntu-latest
     steps:
@@ -20,12 +20,11 @@ jobs:
         with:
           node-version: 20
       
-      # We just run install here to make sure it works
+      # This step just checks that dependencies can be installed
       - name: 1. Build - Install Dependencies
         run: npm ci
 
   # JOB 2: LINT (Stage 4)
-  # Runs in parallel with Test and Security
   lint:
     runs-on: ubuntu-latest
     needs: build # Waits for 'build' to finish
@@ -38,7 +37,7 @@ jobs:
         with:
           node-version: 20
       
-      # FIX: Install dependencies fresh in this job
+      # --- FIX: Install dependencies fresh in this job ---
       - name: Install Dependencies
         run: npm ci
           
@@ -52,7 +51,6 @@ jobs:
           path: lint-report.json
 
   # JOB 3: TEST & COVERAGE (Stages 2 & 3)
-  # Runs in parallel with Lint and Security
   test-and-coverage:
     runs-on: ubuntu-latest
     needs: build # Waits for 'build' to finish
@@ -65,7 +63,7 @@ jobs:
         with:
           node-version: 20
           
-      # FIX: Install dependencies fresh in this job
+      # --- FIX: Install dependencies fresh in this job ---
       - name: Install Dependencies
         run: npm ci
           
@@ -79,7 +77,6 @@ jobs:
           path: coverage/
 
   # JOB 4: SECURITY (Stage 5)
-  # Runs in parallel with Lint and Test
   security:
     runs-on: ubuntu-latest
     needs: build # Waits for 'build' to finish
@@ -92,7 +89,7 @@ jobs:
         with:
           node-version: 20
           
-      # FIX: Install dependencies fresh in this job
+      # --- FIX: Install dependencies fresh in this job ---
       - name: Install Dependencies
         run: npm ci
           
@@ -106,7 +103,6 @@ jobs:
           path: security-report.json
 
   # JOB 5: DEPLOYMENT ARTIFACT
-  # This job now waits for ALL 4 previous jobs to succeed
   cd-pipeline:
     runs-on: ubuntu-latest
     needs: [build, lint, test-and-coverage, security] # Waits for all CI jobs
@@ -118,18 +114,17 @@ jobs:
       
       - name: Download all CI Artifacts
         uses: actions/download-artifact@v4
-        # This will download all artifacts (reports) from the previous jobs
       
       - name: Create Deployment Artifact (.zip)
         run: |
-          mkdir -p deployment/reports # Create folder for reports
+          mkdir -p deployment/reports
           
           # Move reports into the deployment folder
           mv lint-report/lint-report.json deployment/reports/
           mv coverage-report deployment/reports/coverage-report
           mv security-report/security-report.json deployment/reports/
           
-          # Copy the entire client folder
+          # Copy the entire client folder (which has public/ and src/ inside)
           cp -r client deployment/client
           
           # Copy the tests folder

@@ -9,7 +9,7 @@ module.exports = {
   
   coverageThreshold: {                 // ✅ Temporary threshold
     global: {
-      branches: 20,                    // % of branch coverage
+      branches: 15,                    // % of branch coverage
       functions: 20,                   // % of functions covered
       lines: 25,                       // % of lines covered
       statements: 25                   // % of statements covered

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Employee Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Employee Dashboard</h1>
+  </header>
+  <div class="container">
+    <form id="leaveRequestForm" aria-label="Leave Request Form">
+      <h2>Request Leave</h2>
+      <div class="form-group">
+        <label for="start_date">Start Date:</label>
+        <input
+          type="date"
+          id="start_date"
+          name="start_date"
+          aria-label="Start Date"
+          aria-required="true"
+          required
+          tabindex="1"
+        />
+      </div>
+      <div class="form-group">
+        <label for="end_date">End Date:</label>
+        <input
+          type="date"
+          id="end_date"
+          name="end_date"
+          aria-label="End Date"
+          aria-required="true"
+          required
+          tabindex="2"
+        />
+      </div>
+      <div class="form-group">
+        <label for="reason">Reason:</label>
+        <textarea
+          id="reason"
+          name="reason"
+          aria-label="Reason"
+          aria-required="true"
+          required
+          minlength="5"
+          tabindex="3"
+          style="min-height: 50px; resize: vertical;"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="type">Type of Leave:</label>
+        <select id="type" name="type" aria-label="Type of Leave" required tabindex="4">
+          <option value="Casual">Casual</option>
+          <option value="Sick">Sick</option>
+          <option value="Earned">Earned</option>
+        </select>
+      </div>
+      <button
+        type="submit"
+        aria-label="Submit Leave Request"
+        tabindex="5"
+      >
+        Submit
+      </button>
+    </form>
+    <!-- Only one leaveStatus div -->
+    <div id="leaveStatus" aria-live="polite" style="margin-top:1em;"></div>
+    <!-- Loader Spinner below status -->
+    <div id="loader" style="display:none; text-align:center; margin:1em;">
+      <span class="spinner" aria-live="polite" aria-busy="true"></span>
+    </div>
+  </div>
+  <script>
+    // Redirect if not logged in or wrong role
+    const role = localStorage.getItem('role');
+    if (!role || role !== "employee") {
+      window.location.href = "/login.html";
+    }
+    document.getElementById('leaveRequestForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const startDate = document.getElementById('start_date').value;
+      const endDate = document.getElementById('end_date').value;
+      const reason = document.getElementById('reason').value;
+      const type = document.getElementById('type').value;
+      if (!startDate || !endDate || !reason || reason.length < 5) {
+        const leaveStatusDiv = document.getElementById('leaveStatus');
+        leaveStatusDiv.innerText = "Please fill all fields and add a reason (>5 characters).";
+        leaveStatusDiv.style.color = 'red';
+        return;
+      }
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+      const body = {
+        employee_id: userId,
+        start_date: startDate,
+        end_date: endDate,
+        reason: reason,
+        type: type
+      };
+      const loader = document.getElementById('loader');
+      loader.style.display = "block"; // Show loader
+      try {
+        const res = await fetch('/leaves', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(body)
+        });
+        const result = await res.text();
+        loader.style.display = "none"; // Hide loader
+        const leaveStatusDiv = document.getElementById('leaveStatus');
+        if (res.ok) {
+          leaveStatusDiv.style.color = 'green';
+          leaveStatusDiv.innerText = result;
+          e.target.reset();
+        } else {
+          leaveStatusDiv.style.color = 'red';
+          leaveStatusDiv.innerText = result;
+        }
+      } catch (err) {
+        loader.style.display = "none";
+        const leaveStatusDiv = document.getElementById('leaveStatus');
+        leaveStatusDiv.style.color = 'red';
+        leaveStatusDiv.innerText = "Network or server error.";
+      }
+    });
+  </script>
+</body>
+</html>

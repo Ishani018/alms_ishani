@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Automatic Leave Management System</h1>
+  </header>
+  <div class="container">
+    <form id="loginForm" aria-label="Orgnaisation Login Page">
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input 
+          type="email"
+          id="email"
+          name="email"
+          aria-label="Email Address"
+          aria-required="true"
+          required
+          tabindex="1"
+          style="min-width: 250px;" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input 
+          type="password"
+          id="password"
+          name="password"
+          aria-label="Password"
+          aria-required="true"
+          required
+          tabindex="2"
+          style="min-width: 250px;" />
+      </div>
+      <button type="submit"
+        aria-label="Login"
+        tabindex="3"
+        style="
+          background: #222; color: #fff; 
+          padding: 0.8em 2em; 
+          font-size: 1.1em; 
+          border-radius: 6px; 
+          border: none;
+          cursor: pointer;">
+        Login
+      </button>
+    </form>
+    <div style="margin-top: 1em; text-align: center;">
+  <a href="/register.html" id="register-link">New user? Register here.</a>
+</div>
+    <div id="loginStatus" aria-live="polite" style="margin-top:1em;"></div>
+  </div>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const body = {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+      };
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const result = await res.json();
+
+      if (result.token && result.role && result.id) {
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('role', result.role);
+        localStorage.setItem('userId', result.id);
+        window.location.href = '/' + result.role + '/dashboard.html';
+      } else {
+        document.getElementById('loginStatus').innerText = result;
+      }
+    });
+  </script>
+</body>
+</html>

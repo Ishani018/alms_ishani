@@ -1,0 +1,185 @@
+body {
+  background: #ffffff;
+  color: #222;
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background: #222;
+  color: #fff;
+  padding: 1.5em 0 1em 0;
+  text-align: center;
+}
+
+.container {
+  max-width: 400px;
+  margin: 2em auto;
+  background: #f9f9f9;
+  padding: 2em;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.form-group {
+  margin-bottom: 1.5em;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.4em;
+  letter-spacing: 0.03em;
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  font-size: 1em;
+  padding: 0.7em;
+  border-radius: 5px;
+  border: 2px solid #666;
+  margin-bottom: 0.1em;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  background: #fff;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:focus, select:focus, button:focus, textarea:focus {
+  outline: 3px solid #5b9dd9;
+  outline-offset: 2px;
+  border-color: #3875d7;
+  background: #fcfcfc;
+}
+
+button[type="submit"], button {
+  background: #222;
+  color: #fff;
+  padding: 0.8em 2em;
+  font-size: 1.1em;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  margin-right: 0.5em;
+  margin-bottom: 0.3em;
+  transition: background 0.2s;
+}
+
+button[type="submit"]:hover, button[type="submit"]:focus, button:hover, button:focus {
+  background: #3875d7;
+}
+
+#loginStatus, #registerStatus, #leaveStatus, #managerStatus, #adminStatus {
+  min-height: 1.2em;
+  margin-top: 1em;
+  font-size: 1em;
+  color: #c00;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5em;
+  background: #fafafa;
+}
+
+th, td {
+  padding: 0.8em 1em;
+  border: 1px solid #bbb;
+  text-align: left;
+  font-size: 1em;
+}
+
+th {
+  background: #ececec;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background: #f3f3f3;
+}
+
+/* Accessibility: High contrast mode for users who prefer it */
+@media (prefers-contrast: high) {
+  body {
+    background: #000;
+    color: #ffd700;
+  }
+  input, button, textarea {
+    background: #fff;
+    color: #000;
+    border: 2px solid #ffd700;
+  }
+}
+
+/* Responsive layout for mobile */
+@media (max-width: 600px) {
+  .container {
+    width: 98%;
+    max-width: 100vw;
+    padding: 1em;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+  input, button, textarea, select {
+    font-size: 1em;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  table, thead, tbody, th, td, tr {
+    display: block;
+    width: 100%;
+  }
+  thead tr {
+    display: none;
+  }
+  tr {
+    margin-bottom: 1.2em;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 0.5em 0.2em;
+  }
+  td {
+    position: relative;
+    padding-left: 48%;
+    font-size: 0.98em;
+    border: none;
+    border-bottom: 1px solid #eee;
+    min-height: 2.5em;
+  }
+  td:before {
+    position: absolute;
+    top: 0.7em;
+    left: 0.9em;
+    width: 45%;
+    white-space: nowrap;
+    font-weight: bold;
+    color: #333;
+    content: attr(data-label);
+  }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner { 
+    display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 4px solid #bbb;
+  border-top: 4px solid #3875d7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}

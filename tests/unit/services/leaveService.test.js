@@ -61,6 +61,21 @@ describe('Leave Service', () => {
       expect(leave.numberOfDays).toBe(3);
     });
 
+    it('should create leave when balance does not exist', async () => {
+      // Remove balance
+      await LeaveBalance.deleteMany({ employeeId });
+
+      const leaveData = {
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        reason: 'Test reason'
+      };
+
+      const leave = await leaveService.createLeave(leaveData, employeeId);
+      expect(leave).toBeDefined();
+    });
+
     it('should throw error for overlapping leaves', async () => {
       await Leave.create({
         employeeId,
@@ -181,11 +196,59 @@ describe('Leave Service', () => {
       expect(result._id.toString()).toBe(leave._id.toString());
     });
 
+    it('should get leave by ID for manager', async () => {
+      await User.create({
+        _id: managerId,
+        name: 'Manager',
+        email: 'manager@test.com',
+        password: 'password123',
+        role: 'manager'
+      });
+
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      const result = await leaveService.getLeaveById(leave._id, managerId);
+      expect(result._id.toString()).toBe(leave._id.toString());
+    });
+
     it('should throw error if leave not found', async () => {
       const fakeId = new mongoose.Types.ObjectId();
       await expect(
         leaveService.getLeaveById(fakeId, employeeId)
       ).rejects.toThrow('Leave not found');
+    });
+
+    it('should throw error for unauthorized access', async () => {
+      const otherEmployeeId = new mongoose.Types.ObjectId();
+      await User.create({
+        _id: otherEmployeeId,
+        name: 'Other Employee',
+        email: 'other@test.com',
+        password: 'password123',
+        role: 'employee'
+      });
+
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      await expect(
+        leaveService.getLeaveById(leave._id, otherEmployeeId)
+      ).rejects.toThrow('Access denied');
     });
   });
 
@@ -221,6 +284,38 @@ describe('Leave Service', () => {
         endDate: '2025-12-10'
       }, employeeId);
       expect(updated.numberOfDays).toBe(6);
+    });
+
+    it('should throw error when updated dates overlap', async () => {
+      // Create existing leave
+      await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-10',
+        endDate: '2025-12-15',
+        status: 'approved',
+        numberOfDays: 6,
+        reason: 'Existing'
+      });
+
+      // Create pending leave
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      // Try to update to overlapping dates
+      await expect(
+        leaveService.updateLeave(leave._id, {
+          startDate: '2025-12-12',
+          endDate: '2025-12-18'
+        }, employeeId)
+      ).rejects.toThrow('overlap');
     });
 
     it('should throw error when updating non-pending leave', async () => {
@@ -368,6 +463,39 @@ describe('Leave Service', () => {
   });
 
   describe('approveLeave', () => {
+    it('should approve leave successfully', async () => {
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      const approved = await leaveService.approveLeave(leave._id, managerId);
+      expect(approved.status).toBe('approved');
+      expect(approved.approvedBy.toString()).toBe(managerId.toString());
+    });
+
+    it('should approve leave when balance does not exist', async () => {
+      await LeaveBalance.deleteMany({ employeeId });
+
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      const approved = await leaveService.approveLeave(leave._id, managerId);
+      expect(approved.status).toBe('approved');
+    });
+
     it('should throw error when approving non-pending leave', async () => {
       const leave = await Leave.create({
         employeeId,
@@ -389,6 +517,25 @@ describe('Leave Service', () => {
       await expect(
         leaveService.approveLeave(fakeId, managerId)
       ).rejects.toThrow('Leave not found');
+    });
+  });
+
+  describe('rejectLeave', () => {
+    it('should reject leave when balance does not exist', async () => {
+      await LeaveBalance.deleteMany({ employeeId });
+
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      const rejected = await leaveService.rejectLeave(leave._id, managerId, 'Reason');
+      expect(rejected.status).toBe('rejected');
     });
   });
 });

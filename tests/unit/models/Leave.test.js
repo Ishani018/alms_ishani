@@ -54,6 +54,31 @@ describe('Leave Model', () => {
 
       expect(leave.numberOfDays).toBe(5);
     });
+
+    it('should validate endDate is after startDate', async () => {
+      const leaveData = {
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-05',
+        endDate: '2025-12-01', // End before start
+        reason: 'Test'
+      };
+
+      await expect(Leave.create(leaveData)).rejects.toThrow();
+    });
+
+    it('should validate minimum numberOfDays', async () => {
+      const leaveData = {
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-01',
+        numberOfDays: 0.3, // Less than 0.5
+        reason: 'Test'
+      };
+
+      await expect(Leave.create(leaveData)).rejects.toThrow();
+    });
   });
 
   describe('checkOverlap', () => {

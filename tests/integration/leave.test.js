@@ -8,7 +8,6 @@
 const request = require('supertest');
 const app = require('../../src/app');
 const User = require('../../src/models/User');
-const Leave = require('../../src/models/Leave');
 const LeaveBalance = require('../../src/models/LeaveBalance');
 const { setupTestDB, closeTestDB, clearTestDB } = require('../setup/mongodb');
 

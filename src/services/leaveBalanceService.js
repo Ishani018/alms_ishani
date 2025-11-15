@@ -6,7 +6,6 @@
  */
 
 const LeaveBalance = require('../models/LeaveBalance');
-const User = require('../models/User');
 
 /**
  * Get leave balance for a user

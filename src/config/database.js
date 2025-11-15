@@ -21,9 +21,11 @@ const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/alms_db');
 
     if (process.env.NODE_ENV !== 'test') {
+      // eslint-disable-next-line no-console
       console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error(`❌ MongoDB connection error: ${error.message}`);
     // Don't exit process in test environment
     if (process.env.NODE_ENV !== 'test') {

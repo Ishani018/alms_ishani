@@ -86,8 +86,11 @@ app.use(errorHandler);
 // Start server
 if (require.main === module) {
   app.listen(PORT, () => {
+    // eslint-disable-next-line no-console
     console.log(`🚀 Server running on port ${PORT}`);
+    // eslint-disable-next-line no-console
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    // eslint-disable-next-line no-console
     console.log(`🌐 Health check: http://localhost:${PORT}/health`);
   });
 }

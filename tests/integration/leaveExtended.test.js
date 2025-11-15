@@ -8,7 +8,6 @@
 const request = require('supertest');
 const app = require('../../src/app');
 const User = require('../../src/models/User');
-const Leave = require('../../src/models/Leave');
 const { setupTestDB, closeTestDB, clearTestDB } = require('../setup/mongodb');
 
 describe('Extended Leave Management API', () => {

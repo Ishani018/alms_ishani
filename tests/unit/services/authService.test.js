@@ -7,7 +7,6 @@
 
 const mongoose = require('mongoose');
 const authService = require('../../../src/services/authService');
-const User = require('../../../src/models/User');
 const { setupTestDB, closeTestDB, clearTestDB } = require('../../setup/mongodb');
 
 describe('Auth Service', () => {

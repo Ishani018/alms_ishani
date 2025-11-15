@@ -1,7 +1,7 @@
 /**
- * Leave Balance Integration Tests
+ * Extended Leave Balance Integration Tests
  * 
- * @fileoverview Integration tests for leave balance endpoints
+ * @fileoverview Additional integration tests for leave balance
  * @author ALMS Team
  */
 
@@ -9,7 +9,7 @@ const request = require('supertest');
 const app = require('../../src/app');
 const { setupTestDB, closeTestDB, clearTestDB } = require('../setup/mongodb');
 
-describe('Leave Balance API', () => {
+describe('Extended Leave Balance API', () => {
   let userToken;
 
   beforeAll(async () => {
@@ -23,12 +23,11 @@ describe('Leave Balance API', () => {
   beforeEach(async () => {
     await clearTestDB();
 
-    // Create user
     const response = await request(app)
       .post('/api/auth/register')
       .send({
         name: 'Test User',
-        email: 'test@example.com',
+        email: 'testuser@example.com',
         password: 'password123',
         role: 'employee'
       });
@@ -36,21 +35,15 @@ describe('Leave Balance API', () => {
     userToken = response.body.token;
   });
 
-  describe('GET /api/leave-balance', () => {
-    it('should get leave balance for authenticated user', async () => {
+  describe('GET /api/leave-balance with year parameter', () => {
+    it('should get leave balance for specific year', async () => {
       const response = await request(app)
-        .get('/api/leave-balance')
+        .get('/api/leave-balance?year=2024')
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
       expect(response.body.balance).toBeDefined();
-      expect(response.body.balance.balances).toBeDefined();
-    });
-
-    it('should return 401 without authentication', async () => {
-      await request(app)
-        .get('/api/leave-balance')
-        .expect(401);
+      expect(response.body.balance.year).toBe(2024);
     });
   });
 });

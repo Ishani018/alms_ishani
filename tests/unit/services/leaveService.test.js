@@ -129,6 +129,64 @@ describe('Leave Service', () => {
       expect(leaves.length).toBe(1);
       expect(leaves[0].status).toBe('approved');
     });
+
+    it('should filter leaves by leaveType', async () => {
+      await Leave.create({
+        employeeId,
+        leaveType: 'annual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      const leaves = await leaveService.getLeaves(employeeId, { leaveType: 'annual' });
+      expect(leaves.length).toBe(1);
+      expect(leaves[0].leaveType).toBe('annual');
+    });
+
+    it('should filter leaves by date range', async () => {
+      await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-05',
+        endDate: '2025-12-07',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      const leaves = await leaveService.getLeaves(employeeId, {
+        startDate: '2025-12-01',
+        endDate: '2025-12-10'
+      });
+      expect(leaves.length).toBe(1);
+    });
+  });
+
+  describe('getLeaveById', () => {
+    it('should get leave by ID for employee', async () => {
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      const result = await leaveService.getLeaveById(leave._id, employeeId);
+      expect(result._id.toString()).toBe(leave._id.toString());
+    });
+
+    it('should throw error if leave not found', async () => {
+      const fakeId = new mongoose.Types.ObjectId();
+      await expect(
+        leaveService.getLeaveById(fakeId, employeeId)
+      ).rejects.toThrow('Leave not found');
+    });
   });
 
   describe('updateLeave', () => {
@@ -147,6 +205,24 @@ describe('Leave Service', () => {
       expect(updated.reason).toBe('Updated reason');
     });
 
+    it('should update leave dates and recalculate days', async () => {
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      const updated = await leaveService.updateLeave(leave._id, {
+        startDate: '2025-12-05',
+        endDate: '2025-12-10'
+      }, employeeId);
+      expect(updated.numberOfDays).toBe(6);
+    });
+
     it('should throw error when updating non-pending leave', async () => {
       const leave = await Leave.create({
         employeeId,
@@ -161,6 +237,23 @@ describe('Leave Service', () => {
       await expect(
         leaveService.updateLeave(leave._id, { reason: 'New reason' }, employeeId)
       ).rejects.toThrow('Only pending leaves can be updated');
+    });
+
+    it('should throw error when updating another employee\'s leave', async () => {
+      const otherEmployeeId = new mongoose.Types.ObjectId();
+      const leave = await Leave.create({
+        employeeId: otherEmployeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      await expect(
+        leaveService.updateLeave(leave._id, { reason: 'New reason' }, employeeId)
+      ).rejects.toThrow('You can only update your own leave requests');
     });
   });
 
@@ -179,6 +272,39 @@ describe('Leave Service', () => {
       const cancelled = await leaveService.cancelLeave(leave._id, employeeId);
       expect(cancelled.status).toBe('cancelled');
     });
+
+    it('should throw error when cancelling another employee\'s leave', async () => {
+      const otherEmployeeId = new mongoose.Types.ObjectId();
+      const leave = await Leave.create({
+        employeeId: otherEmployeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      await expect(
+        leaveService.cancelLeave(leave._id, employeeId)
+      ).rejects.toThrow('You can only cancel your own leave requests');
+    });
+
+    it('should throw error when cancelling already cancelled leave', async () => {
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'cancelled',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      await expect(
+        leaveService.cancelLeave(leave._id, employeeId)
+      ).rejects.toThrow('already cancelled');
+    });
   });
 
   describe('rejectLeave', () => {
@@ -196,6 +322,73 @@ describe('Leave Service', () => {
       const rejected = await leaveService.rejectLeave(leave._id, managerId, 'Not enough coverage');
       expect(rejected.status).toBe('rejected');
       expect(rejected.rejectionReason).toBe('Not enough coverage');
+    });
+
+    it('should throw error when rejecting non-pending leave', async () => {
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'approved',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      await expect(
+        leaveService.rejectLeave(leave._id, managerId, 'Reason')
+      ).rejects.toThrow('Only pending leaves can be rejected');
+    });
+  });
+
+  describe('getPendingApprovals', () => {
+    it('should get pending approvals for manager', async () => {
+      await User.create({
+        _id: employeeId,
+        name: 'Employee',
+        email: 'emp@test.com',
+        password: 'password123',
+        role: 'employee',
+        managerId
+      });
+
+      await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'pending',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      const leaves = await leaveService.getPendingApprovals(managerId);
+      expect(leaves.length).toBe(1);
+    });
+  });
+
+  describe('approveLeave', () => {
+    it('should throw error when approving non-pending leave', async () => {
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: '2025-12-01',
+        endDate: '2025-12-03',
+        status: 'approved',
+        numberOfDays: 3,
+        reason: 'Test'
+      });
+
+      await expect(
+        leaveService.approveLeave(leave._id, managerId)
+      ).rejects.toThrow('Only pending leaves can be approved');
+    });
+
+    it('should throw error when leave not found', async () => {
+      const fakeId = new mongoose.Types.ObjectId();
+      await expect(
+        leaveService.approveLeave(fakeId, managerId)
+      ).rejects.toThrow('Leave not found');
     });
   });
 });

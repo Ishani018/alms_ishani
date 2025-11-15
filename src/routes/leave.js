@@ -41,9 +41,13 @@ router.put('/:id', authenticate, updateLeaveValidation, validate, leaveControlle
 router.delete('/:id', authenticate, leaveController.cancelLeave);
 
 // Manager routes (authenticated + authorized)
-router.get('/approvals/pending', authenticate, authorize('manager', 'hr', 'admin'), leaveController.getPendingApprovals);
-router.post('/:id/approve', authenticate, authorize('manager', 'hr', 'admin'), leaveController.approveLeave);
-router.post('/:id/reject', authenticate, authorize('manager', 'hr', 'admin'), rejectLeaveValidation, validate, leaveController.rejectLeave);
+router.get('/approvals/pending', authenticate,
+  authorize('manager', 'hr', 'admin'), leaveController.getPendingApprovals);
+router.post('/:id/approve', authenticate,
+  authorize('manager', 'hr', 'admin'), leaveController.approveLeave);
+router.post('/:id/reject', authenticate,
+  authorize('manager', 'hr', 'admin'), rejectLeaveValidation, validate,
+  leaveController.rejectLeave);
 
 module.exports = router;
 

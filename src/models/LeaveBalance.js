@@ -80,24 +80,24 @@ leaveBalanceSchema.methods.updateBalance = function(leaveType, action, days) {
   const balance = this.balances[leaveType];
 
   switch (action) {
-    case 'add_pending':
-      balance.pending += days;
-      balance.available -= days;
-      break;
-    case 'approve':
-      balance.pending -= days;
-      balance.used += days;
-      break;
-    case 'reject':
-      balance.pending -= days;
-      balance.available += days;
-      break;
-    case 'cancel':
-      balance.pending -= days;
-      balance.available += days;
-      break;
-    default:
-      break;
+  case 'add_pending':
+    balance.pending += days;
+    balance.available -= days;
+    break;
+  case 'approve':
+    balance.pending -= days;
+    balance.used += days;
+    break;
+  case 'reject':
+    balance.pending -= days;
+    balance.available += days;
+    break;
+  case 'cancel':
+    balance.pending -= days;
+    balance.available += days;
+    break;
+  default:
+    break;
   }
 };
 

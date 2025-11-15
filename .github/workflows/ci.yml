@@ -50,6 +50,15 @@ jobs:
         with:
           name: node-modules
           path: node_modules/
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install eslint
+        run: npm install -g eslint
+
+- name: Run eslint
+  run: npx eslint . --format=json --output-file lint-report.json
       - name: 4. Lint - Run ESLint
         # Fails if lint errors are found (Rubric: 0 errors)
         run: npx eslint . --format=json --output-file lint-report.json

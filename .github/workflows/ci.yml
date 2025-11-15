@@ -36,6 +36,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      
+      # --- THIS IS THE FIX ---
+      # Add Node.js runtime to this runner
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # --- END FIX ---
+
       - name: Download node_modules artifact
         uses: actions/download-artifact@v4
         with:
@@ -75,6 +84,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        
+      # --- THIS IS THE FIX ---
+      # Add Node.js runtime to this runner
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # --- END FIX ---
+
       - name: Download node_modules artifact
         uses: actions/download-artifact@v4
         with:
@@ -117,6 +135,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        
+      # --- THIS IS THE FIX ---
+      # Add Node.js runtime to this runner
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # --- END FIX ---
+
       - name: Download node_modules artifact
         uses: actions/download-artifact@v4
         with:

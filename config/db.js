@@ -1,14 +1,11 @@
+// In config/db.js
 const mysql = require('mysql2');
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'Harrystyles_123',
-  database: 'leave_management'
+
+const db = mysql.createConnection({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'your_local_username',
+  password: process.env.DB_PASSWORD || 'your_local_password',
+  database: process.env.DB_NAME || 'your_local_database_name'
 });
 
-connection.connect(err => {
-  if (err) throw err;
-  console.log('MySQL connected...');
-});
-
-module.exports = connection;
+module.exports = db;

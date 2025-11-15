@@ -32,3 +32,7 @@ describe('Registration', () => {
 });
 
 // And so on for leaves endpoints...
+afterAll((done) => {
+  // Close the MySQL connection so Jest can exit cleanly
+  db.end(done);
+});

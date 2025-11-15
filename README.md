@@ -1,122 +1,32 @@
-![Build Status](https://github.com/pestechnology/PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS/actions/workflows/ci.yml/badge.svg)
+## 🛠️ CI/CD Pipeline
 
+This project uses GitHub Actions for continuous integration (CI) and continuous delivery (CD). The pipeline is triggered on every `push` and `pull_request` to the `main` and `develop` branches.
 
-# Automated Leave Management System
+[cite_start]It consists of 5 required stages as per the project rubric[cite: 2, 665]:
 
-**Project ID:** P12  
-**Course:** UE23CS341A  
-**Academic Year:** 2025  
-**Semester:** 5th Sem  
-**Campus:** RR  
-**Branch:** CSE  
-**Section:** E  
-**Team:** ALMS
+1.  **Build:** Installs all `npm` dependencies using `npm ci` to ensure a clean and repeatable build.
+2.  **Test:** Runs the full Jest test suite (unit and integration tests) against a live MySQL test database service.
+3.  **Coverage:** Generates a code coverage report during the test stage. [cite_start]The pipeline **enforces a quality gate of 75%** global coverage (lines, statements, branches, and functions).
+4.  **Lint:** Performs static code analysis using ESLint. [cite_start]The pipeline will **fail if any ESLint errors** are found[cite: 2, 686].
+5.  [cite_start]**Security:** Runs `npm audit` to scan for high-severity vulnerabilities in project dependencies[cite: 2, 689].
 
-## 📋 Project Description
+### Deployment Artifact
 
-A leave management system - manage applying/approving leaves and different types of leave.
+[cite_start]After all 5 CI stages pass, a final job packages the following into a `deployment-package.zip` file[cite: 2, 788]:
+* [cite_start]Project source code (controllers, models, routes, public, etc.) [cite: 2, 790]
+* [cite_start]`README.md` and `package.json` [cite: 2, 796, 797]
+* [cite_start]All CI/CD reports (Coverage, Lint, and Security) [cite: 2, 791, 792, 793]
 
-This repository contains the source code and documentation for the Automated Leave Management System project, developed as part of the UE23CS341A course at PES University.
+### How to Run Checks Locally
 
-## 🧑‍💻 Development Team (ALMS)
-
-- [@JastiTheCoder](https://github.com/JastiTheCoder) - Scrum Master
-- [@Ishani018](https://github.com/Ishani018) - Developer Team
-- [@jahnvi1504](https://github.com/jahnvi1504) - Developer Team
-- [@kakarlachaithanya](https://github.com/kakarlachaithanya) - Developer Team
-
-## 👨‍🏫 Teaching Assistant
-
-- [@RakshithKakunje9](https://github.com/RakshithKakunje9)
-- [@Thaman-N](https://github.com/Thaman-N)
-- [@v-s-v-i-s-h-w-a-s](https://github.com/v-s-v-i-s-h-w-a-s)
-
-## 👨‍⚖️ Faculty Supervisor
-
-- [@rbanginwar](https://github.com/rbanginwar)
-
-
-## 🚀 Getting Started
-
-### Prerequisites
-- [List your prerequisites here]
-
-### Installation
-1. Clone the repository
-   ```bash
-   git clone https://github.com/pestechnology/PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS.git
-   cd PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS
-   ```
-
-2. Install dependencies
-   ```bash
-   # Add your installation commands here
-   ```
-
-3. Run the application
-   ```bash
-   # Add your run commands here
-   ```
-
-## 📁 Project Structure
-
-```
-PESU_RR_CSE_E_P12_Automated_Leave_Management_System_ALMS/
-├── src/                 # Source code
-├── docs/               # Documentation
-├── tests/              # Test files
-├── .github/            # GitHub workflows and templates
-├── README.md          # This file
-└── ...
-```
-
-## 🛠️ Development Guidelines
-
-### Branching Strategy
-- `main`: Production-ready code
-- `develop`: Development branch
-- `feature/*`: Feature branches
-- `bugfix/*`: Bug fix branches
-
-### Commit Messages
-Follow conventional commit format:
-- `feat:` New features
-- `fix:` Bug fixes
-- `docs:` Documentation changes
-- `style:` Code style changes
-- `refactor:` Code refactoring
-- `test:` Test-related changes
-
-### Code Review Process
-1. Create feature branch from `develop`
-2. Make changes and commit
-3. Create Pull Request to `develop`
-4. Request review from team members
-5. Merge after approval
-
-## 📚 Documentation
-
-- [API Documentation](docs/api.md)
-- [User Guide](docs/user-guide.md)
-- [Developer Guide](docs/developer-guide.md)
-
-## 🧪 Testing
+You can run the same checks locally before pushing:
 
 ```bash
-# Run tests
-npm test
+# Run tests and generate coverage
+npm test -- --coverage
 
-# Run tests with coverage
-npm run test:coverage
-```
+# Check linting
+npx eslint .
 
-## 📄 License
-
-This project is developed for educational purposes as part of the PES University UE23CS341A curriculum.
-
----
-
-**Course:** UE23CS341A  
-**Institution:** PES University  
-**Academic Year:** 2025  
-**Semester:** 5th Sem
+# Run security scan
+npm audit --audit-level=high

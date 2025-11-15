@@ -45,6 +45,24 @@ const errorHandler = (err, req, res, next) => {
     error = { message, statusCode: 401 };
   }
 
+  // Authentication/Authorization errors
+  if (err.message && (
+    err.message.includes('Invalid credentials') ||
+    err.message.includes('Authentication required') ||
+    err.message.includes('User not found or inactive') ||
+    err.message.includes('Invalid or expired token')
+  )) {
+    error = { message: err.message, statusCode: 401 };
+  }
+
+  if (err.message && (
+    err.message.includes('Access denied') ||
+    err.message.includes('Insufficient permissions') ||
+    err.message.includes('not authorized')
+  )) {
+    error = { message: err.message, statusCode: 403 };
+  }
+
   res.status(error.statusCode || 500).json({
     error: error.message || 'Server Error',
     code: error.code || 'INTERNAL_ERROR',

@@ -230,7 +230,10 @@ const getPendingApprovals = async (managerId) => {
  * @returns {Promise<Object>} Approved leave
  */
 const approveLeave = async (leaveId, managerId) => {
-  const leave = await Leave.findById(leaveId).populate('employeeId');
+  const leave = await Leave.findById(leaveId).populate({
+    path: 'employeeId',
+    select: 'name email managerId role'
+  });
 
   if (!leave) {
     throw new Error('Leave not found');
@@ -242,8 +245,14 @@ const approveLeave = async (leaveId, managerId) => {
 
   // Check if manager is authorized
   const employee = leave.employeeId;
-  if (employee.managerId && employee.managerId.toString() !== managerId) {
-    throw new Error('You are not authorized to approve this leave');
+  // If employee has a managerId, it must match the approving manager
+  // If no managerId is set, allow any manager/hr/admin to approve (for flexibility)
+  if (employee.managerId) {
+    const employeeManagerId = employee.managerId.toString ? employee.managerId.toString() : employee.managerId;
+    const managerIdStr = managerId.toString ? managerId.toString() : managerId;
+    if (employeeManagerId !== managerIdStr) {
+      throw new Error('You are not authorized to approve this leave');
+    }
   }
 
   // Update leave balance

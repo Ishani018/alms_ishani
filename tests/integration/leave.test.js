@@ -120,6 +120,13 @@ describe('Leave Management API', () => {
 
   describe('POST /api/leaves/:id/approve', () => {
     it('should approve a leave request', async () => {
+      // Ensure employee has manager set
+      const employee = await User.findById(employeeId);
+      if (!employee.managerId || employee.managerId.toString() !== managerId.toString()) {
+        employee.managerId = managerId;
+        await employee.save();
+      }
+
       // Create a leave
       const leaveResponse = await request(app)
         .post('/api/leaves')

@@ -8,18 +8,19 @@
 const mongoose = require('mongoose');
 const authService = require('../../../src/services/authService');
 const User = require('../../../src/models/User');
+const { setupTestDB, closeTestDB, clearTestDB } = require('../../setup/mongodb');
 
 describe('Auth Service', () => {
   beforeAll(async () => {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/alms_test');
-  });
+    await setupTestDB();
+  }, 30000);
 
   afterAll(async () => {
-    await mongoose.connection.close();
-  });
+    await closeTestDB();
+  }, 30000);
 
   beforeEach(async () => {
-    await User.deleteMany({});
+    await clearTestDB();
   });
 
   describe('register', () => {

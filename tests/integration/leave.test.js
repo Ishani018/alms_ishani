@@ -6,11 +6,11 @@
  */
 
 const request = require('supertest');
-const mongoose = require('mongoose');
 const app = require('../../src/app');
 const User = require('../../src/models/User');
 const Leave = require('../../src/models/Leave');
 const LeaveBalance = require('../../src/models/LeaveBalance');
+const { setupTestDB, closeTestDB, clearTestDB } = require('../setup/mongodb');
 
 describe('Leave Management API', () => {
   let employeeToken;
@@ -19,17 +19,15 @@ describe('Leave Management API', () => {
   let managerId;
 
   beforeAll(async () => {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/alms_test');
-  });
+    await setupTestDB();
+  }, 30000);
 
   afterAll(async () => {
-    await mongoose.connection.close();
-  });
+    await closeTestDB();
+  }, 30000);
 
   beforeEach(async () => {
-    await User.deleteMany({});
-    await Leave.deleteMany({});
-    await LeaveBalance.deleteMany({});
+    await clearTestDB();
 
     // Create employee
     const employeeResponse = await request(app)

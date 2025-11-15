@@ -1,5 +1,6 @@
 module.exports = {
   testEnvironment: 'node',
+  testTimeout: 30000,
   coverageThreshold: {
     global: {
       branches: 75,

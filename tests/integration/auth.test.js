@@ -6,21 +6,21 @@
  */
 
 const request = require('supertest');
-const mongoose = require('mongoose');
 const app = require('../../src/app');
 const User = require('../../src/models/User');
+const { setupTestDB, closeTestDB, clearTestDB } = require('../setup/mongodb');
 
 describe('Authentication API', () => {
   beforeAll(async () => {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/alms_test');
-  });
+    await setupTestDB();
+  }, 30000);
 
   afterAll(async () => {
-    await mongoose.connection.close();
-  });
+    await closeTestDB();
+  }, 30000);
 
   beforeEach(async () => {
-    await User.deleteMany({});
+    await clearTestDB();
   });
 
   describe('POST /api/auth/register', () => {

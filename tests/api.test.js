@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../app'); // Your Express app
+const db = require('../config/db'); // Impo
 
 describe('Authentication', () => {
   test('should login a valid user', async () => {

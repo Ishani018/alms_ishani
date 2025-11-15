@@ -1,22 +1,30 @@
 {
-  "name": "pesu_rr_cse_e_p12_automated_leave_management_system_alms",
+  "name": "alms_se",
   "version": "1.0.0",
-  "description": "Project ID: P12 | Course: UE23CS341A | Academic Year: 2025 | Semester: 5th Sem | Campus: RR | Branch: CSE-E",
-  "main": "index.js",
-  "directories": {
-    "test": "tests"
-  },
+  "description": "Automatic Leave Management System",
+  "main": "app.js",
   "scripts": {
-    "test": "jest",
-    "lint": "eslint ."
+    "start": "node server.js",
+    "dev": "nodemon app.js",
+    "test": "jest"
   },
-  "keywords": [],
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.15.3",
+    "nodemailer": "^7.0.10"
+  },
+  "devDependencies": {
+    "eslint": "^9.7.0",
+    "@eslint/js": "^9.7.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
+  },
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-  "eslint": "^9.8.0",
-  "@eslint/js": "^9.8.0",
-  "globals": "^15.8.0",
-  "jest": "^30.2.0"
-}
+  "keywords": []
 }

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Manager Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Manager Dashboard</h1>
+  </header>
+  <div class="container">
+    <h2>Leave Requests</h2>
+    <table id="leaveRequests" border="1" aria-label="Pending Leave Requests" style="width:100%;">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Employee</th>
+          <th scope="col">Dates</th>
+          <th scope="col">Reason</th>
+          <th scope="col">Status</th>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="managerStatus" aria-live="polite" style="margin-top:1em;"></div>
+  </div>
+  <script>
+    // Redirect if not logged in or wrong role
+    const role = localStorage.getItem('role');
+    if (!role || role !== "manager") {
+      window.location.href = "/login.html";
+    }
+    const token = localStorage.getItem('token');
+    
+    async function fetchRequests() {
+      const res = await fetch('/leaves', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const tbody = document.querySelector('#leaveRequests tbody');
+      tbody.innerHTML = "";
+      if (!data.length) {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td colspan="6" style="text-align:center;">No leave requests found.</td>`;
+        tbody.appendChild(row);
+        return;
+      }
+      data.forEach(req => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${req.id}</td>
+          <td>${req.employee_id}</td>
+          <td>${req.start_date} to ${req.end_date}</td>
+          <td>${req.reason}</td>
+          <td>${req.status}</td>
+          <td>
+            <button aria-label="Approve request ${req.id}" onclick="updateRequest(${req.id}, 'Approved')">Approve</button>
+            <button aria-label="Decline request ${req.id}" onclick="updateRequest(${req.id}, 'Declined')">Decline</button>
+          </td>`;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function updateRequest(id, status) {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/leaves/${id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ status })
+      });
+      const result = await res.text();
+      const managerStatusDiv = document.getElementById('managerStatus');
+      // Only notification color feedback change here:
+      if (res.ok && result.toLowerCase().includes("notification sent")) {
+        managerStatusDiv.style.color = "green";
+      } else if (res.ok && result.toLowerCase().includes("email not sent")) {
+        managerStatusDiv.style.color = "orange";
+      } else if (res.ok) {
+        managerStatusDiv.style.color = "green";
+      } else {
+        managerStatusDiv.style.color = "red";
+      }
+      managerStatusDiv.innerText = result;
+      fetchRequests();
+    }
+
+    fetchRequests();
+  </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Admin Dashboard</h1>
+  </header>
+  <div class="container">
+    <h2>All Leaves</h2>
+    <table id="allLeaves" border="1" aria-label="All Leave Requests" style="width:100%;">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Employee</th>
+          <th scope="col">Dates</th>
+          <th scope="col">Reason</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="adminStatus" aria-live="polite" style="margin-top:1em;"></div>
+  </div>
+  <script>
+    // Redirect if not logged in or wrong role
+    const role = localStorage.getItem('role');
+    if (!role || role !== "admin") {
+      window.location.href = "/login.html";
+    }
+    const token = localStorage.getItem('token');
+
+    async function fetchLeaves() {
+      const res = await fetch('/leaves', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const tbody = document.querySelector('#allLeaves tbody');
+      tbody.innerHTML = "";
+      if (!data.length) {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td colspan="5" style="text-align:center;">No leave requests found.</td>`;
+        tbody.appendChild(row);
+        return;
+      }
+      data.forEach(req => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${req.id}</td>
+          <td>${req.employee_id}</td>
+          <td>${req.start_date} to ${req.end_date}</td>
+          <td>${req.reason}</td>
+          <td>${req.status}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    fetchLeaves();
+  </script>
+</body>
+</html>

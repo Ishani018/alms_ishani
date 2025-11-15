@@ -291,8 +291,13 @@ const rejectLeave = async (leaveId, managerId, rejectionReason) => {
 
   // Check if manager is authorized
   const employee = leave.employeeId;
-  if (employee.managerId && employee.managerId.toString() !== managerId) {
-    throw new Error('You are not authorized to reject this leave');
+  // If employee has a managerId, it must match the rejecting manager
+  if (employee.managerId) {
+    const employeeManagerId = employee.managerId.toString ? employee.managerId.toString() : employee.managerId;
+    const managerIdStr = managerId.toString ? managerId.toString() : managerId;
+    if (employeeManagerId !== managerIdStr) {
+      throw new Error('You are not authorized to reject this leave');
+    }
   }
 
   // Update leave balance

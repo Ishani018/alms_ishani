@@ -109,7 +109,8 @@ const getLeaveById = async (leaveId, userId) => {
 
   // Check authorization
   const user = await User.findById(userId);
-  if (leave.employeeId._id.toString() !== userId && 
+  const employeeIdStr = leave.employeeId._id ? leave.employeeId._id.toString() : leave.employeeId.toString();
+  if (employeeIdStr !== userId.toString() && 
       user.role !== 'manager' && 
       user.role !== 'hr' && 
       user.role !== 'admin') {

@@ -54,14 +54,14 @@ describe('Leave Controller Error Handling', () => {
   });
 
   describe('Error Handling', () => {
-    it('should return 404 for non-existent leave', async () => {
+    it('should return 400 for non-existent leave', async () => {
       const fakeId = '507f1f77bcf86cd799439011';
       const response = await request(app)
         .get(`/api/leaves/${fakeId}`)
         .set('Authorization', `Bearer ${employeeToken}`)
-        .expect(404);
+        .expect(400);
 
-      expect(response.body.error).toBeDefined();
+      expect(response.body.error).toContain('Leave not found');
     });
 
     it('should return 403 when accessing another employee\'s leave', async () => {

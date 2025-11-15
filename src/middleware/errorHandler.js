@@ -64,6 +64,20 @@ const errorHandler = (err, req, res, _next) => {
     error = { message: err.message, statusCode: 403 };
   }
 
+  // Handle specific business logic errors
+  if (err.message && (
+    err.message.includes('Leave not found') ||
+    err.message.includes('User with this email already exists') ||
+    err.message.includes('You can only update your own leave requests') ||
+    err.message.includes('You can only cancel your own leave requests') ||
+    err.message.includes('Only pending leaves can be updated') ||
+    err.message.includes('Only pending leaves can be cancelled') ||
+    err.message.includes('Only pending leaves can be approved') ||
+    err.message.includes('Only pending leaves can be rejected')
+  )) {
+    error = { message: err.message, statusCode: 400 };
+  }
+
   res.status(error.statusCode || 500).json({
     error: error.message || 'Server Error',
     code: error.code || 'INTERNAL_ERROR',

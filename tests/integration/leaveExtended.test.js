@@ -8,6 +8,7 @@
 const request = require('supertest');
 const app = require('../../src/app');
 const User = require('../../src/models/User');
+const Leave = require('../../src/models/Leave');
 const { setupTestDB, closeTestDB, clearTestDB } = require('../setup/mongodb');
 
 describe('Extended Leave Management API', () => {
@@ -69,6 +70,9 @@ describe('Extended Leave Management API', () => {
         });
 
       const leaveId = leaveResponse.body.leave._id;
+
+      // Wait a bit for the leave to be saved
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Get the leave
       const response = await request(app)

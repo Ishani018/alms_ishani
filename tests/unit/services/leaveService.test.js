@@ -455,6 +455,9 @@ describe('Leave Service', () => {
 
   describe('rejectLeave', () => {
     it('should reject leave request', async () => {
+      // Ensure employee has managerId set
+      await User.findByIdAndUpdate(employeeId, { managerId });
+
       const leave = await Leave.create({
         employeeId,
         leaveType: 'casual',
@@ -489,14 +492,8 @@ describe('Leave Service', () => {
 
   describe('getPendingApprovals', () => {
     it('should get pending approvals for manager', async () => {
-      await User.create({
-        _id: employeeId,
-        name: 'Employee',
-        email: 'emp@test.com',
-        password: 'password123',
-        role: 'employee',
-        managerId
-      });
+      // Update existing user with managerId
+      await User.findByIdAndUpdate(employeeId, { managerId });
 
       await Leave.create({
         employeeId,
@@ -573,6 +570,8 @@ describe('Leave Service', () => {
 
   describe('rejectLeave', () => {
     it('should reject leave when balance does not exist', async () => {
+      // Ensure employee has managerId set
+      await User.findByIdAndUpdate(employeeId, { managerId });
       await LeaveBalance.deleteMany({ employeeId });
 
       const leave = await Leave.create({

@@ -1,18 +1,15 @@
 // jest.config.js
 module.exports = {
-  roots: ["<rootDir>/tests"],
-  testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
-  testEnvironment: "node",
-
-  collectCoverage: true,               // ✅ Generate coverage info
-  coverageDirectory: "coverage",       // Output folder (default is fine)
+  // ... other settings
+  collectCoverage: true,
+  coverageDirectory: "coverage",
   
-  coverageThreshold: {                 // ✅ Temporary threshold
+  coverageThreshold: {
     global: {
-      branches: 15,                    // % of branch coverage
-      functions: 20,                   // % of functions covered
-      lines: 25,                       // % of lines covered
-      statements: 25                   // % of statements covered
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75
     },
   },
 };

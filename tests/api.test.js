@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../app'); // Your Express app
+const db = require('../config/db'); // Impo
 
 describe('Authentication', () => {
   test('should login a valid user', async () => {
@@ -40,3 +41,7 @@ afterAll((done) => {
   db.end(done);
 });
 // And so on for leaves endpoints...
+afterAll((done) => {
+  // Close the MySQL connection so Jest can exit cleanly
+  db.end(done);
+});

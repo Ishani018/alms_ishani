@@ -350,6 +350,13 @@ describe('Leave Service', () => {
         leaveService.updateLeave(leave._id, { reason: 'New reason' }, employeeId)
       ).rejects.toThrow('You can only update your own leave requests');
     });
+
+    it('should throw error when leave not found for update', async () => {
+      const fakeId = new mongoose.Types.ObjectId();
+      await expect(
+        leaveService.updateLeave(fakeId, { reason: 'New reason' }, employeeId)
+      ).rejects.toThrow('Leave not found');
+    });
   });
 
   describe('cancelLeave', () => {
@@ -399,6 +406,50 @@ describe('Leave Service', () => {
       await expect(
         leaveService.cancelLeave(leave._id, employeeId)
       ).rejects.toThrow('already cancelled');
+    });
+
+    it('should throw error when cancelling approved leave that has started', async () => {
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 5); // 5 days ago
+
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: pastDate,
+        endDate: pastDate,
+        status: 'approved',
+        numberOfDays: 1,
+        reason: 'Test'
+      });
+
+      await expect(
+        leaveService.cancelLeave(leave._id, employeeId)
+      ).rejects.toThrow('Cannot cancel an approved leave that has already started');
+    });
+
+    it('should cancel approved leave with future start date', async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 10); // 10 days from now
+
+      const leave = await Leave.create({
+        employeeId,
+        leaveType: 'casual',
+        startDate: futureDate,
+        endDate: futureDate,
+        status: 'approved',
+        numberOfDays: 1,
+        reason: 'Test'
+      });
+
+      const cancelled = await leaveService.cancelLeave(leave._id, employeeId);
+      expect(cancelled.status).toBe('cancelled');
+    });
+
+    it('should throw error when leave not found for cancellation', async () => {
+      const fakeId = new mongoose.Types.ObjectId();
+      await expect(
+        leaveService.cancelLeave(fakeId, employeeId)
+      ).rejects.toThrow('Leave not found');
     });
   });
 
@@ -536,6 +587,13 @@ describe('Leave Service', () => {
 
       const rejected = await leaveService.rejectLeave(leave._id, managerId, 'Reason');
       expect(rejected.status).toBe('rejected');
+    });
+
+    it('should throw error when leave not found', async () => {
+      const fakeId = new mongoose.Types.ObjectId();
+      await expect(
+        leaveService.rejectLeave(fakeId, managerId, 'Reason')
+      ).rejects.toThrow('Leave not found');
     });
   });
 });

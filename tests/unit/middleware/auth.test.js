@@ -63,6 +63,50 @@ describe('Authentication Middleware', () => {
 
       expect(response.body.error).toBeDefined();
     });
+
+    it('should reject request with inactive user', async () => {
+      await User.findByIdAndUpdate(userId, { isActive: false });
+
+      const response = await request(app)
+        .get('/api/auth/profile')
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(401);
+
+      expect(response.body.error).toContain('inactive');
+    });
+  });
+
+  describe('authorize middleware', () => {
+    it('should allow access for authorized role', async () => {
+      const manager = await User.create({
+        name: 'Manager',
+        email: 'manager@example.com',
+        password: 'password123',
+        role: 'manager'
+      });
+
+      const managerToken = generateToken({
+        id: manager._id,
+        email: manager.email,
+        role: manager.role
+      });
+
+      const response = await request(app)
+        .get('/api/leaves/approvals/pending')
+        .set('Authorization', `Bearer ${managerToken}`)
+        .expect(200);
+
+      expect(response.body).toBeDefined();
+    });
+
+    it('should reject access for unauthorized role', async () => {
+      const response = await request(app)
+        .get('/api/leaves/approvals/pending')
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(403);
+
+      expect(response.body.error).toContain('Access denied');
+    });
   });
 });
 

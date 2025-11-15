@@ -134,7 +134,7 @@ const updateLeave = async (leaveId, updateData, userId) => {
     throw new Error('Leave not found');
   }
 
-  if (leave.employeeId.toString() !== userId) {
+  if (leave.employeeId.toString() !== userId.toString()) {
     throw new Error('You can only update your own leave requests');
   }
 
@@ -178,7 +178,7 @@ const cancelLeave = async (leaveId, userId) => {
     throw new Error('Leave not found');
   }
 
-  if (leave.employeeId.toString() !== userId) {
+  if (leave.employeeId.toString() !== userId.toString()) {
     throw new Error('You can only cancel your own leave requests');
   }
 

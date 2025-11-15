@@ -100,6 +100,9 @@ describe('Extended Leave Management API', () => {
 
       const leaveId = leaveResponse.body.leave._id;
 
+      // Wait a bit for the leave to be fully saved
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Update the leave
       const response = await request(app)
         .put(`/api/leaves/${leaveId}`)
@@ -128,6 +131,9 @@ describe('Extended Leave Management API', () => {
 
       const leaveId = leaveResponse.body.leave._id;
 
+      // Wait a bit for the leave to be fully saved
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Cancel the leave
       const response = await request(app)
         .delete(`/api/leaves/${leaveId}`)
@@ -152,6 +158,10 @@ describe('Extended Leave Management API', () => {
         });
 
       const leaveId = leaveResponse.body.leave._id;
+
+      // Wait a bit for the leave to be fully saved and ensure manager relationship
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await User.findByIdAndUpdate(employeeId, { managerId });
 
       // Reject the leave
       const response = await request(app)

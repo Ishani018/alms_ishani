@@ -31,7 +31,15 @@ describe('Registration', () => {
     expect(res.text).toMatch(/User registered successfully/);
   });
 });
+// Connect to the test database *before* any tests run
+beforeAll((done) => {
+  db.connect(done);
+});
 
+// Close the connection *after* all tests are done
+afterAll((done) => {
+  db.end(done);
+});
 // And so on for leaves endpoints...
 afterAll((done) => {
   // Close the MySQL connection so Jest can exit cleanly

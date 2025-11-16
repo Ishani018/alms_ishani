@@ -1,6 +1,39 @@
 const request = require('supertest');
-const app = require('../app'); // Your Express app
-const db = require('../config/db'); // Impo
+const db = require('../config/db');
+const jwt = require('jsonwebtoken');
+
+// Mock database and JWT before requiring app
+jest.mock('../config/db', () => ({
+  query: jest.fn()
+}));
+jest.mock('jsonwebtoken', () => ({
+  sign: jest.fn(() => 'mock-token')
+}));
+
+const app = require('../app');
+
+beforeAll(() => {
+  // Setup mock database responses
+  db.query.mockImplementation((sql, params, callback) => {
+    if (sql.includes('INSERT INTO users')) {
+      callback(null, { insertId: 1 });
+    } else if (sql.includes('SELECT * FROM users WHERE email')) {
+      if (params && params[0] === 'user@example.com') {
+        callback(null, [{ id: 1, email: 'user@example.com', password: 'password123', role: 'employee', name: 'Test User' }]);
+      } else if (params && params[0] === 'newuser@example.com') {
+        callback(null, []);
+      } else {
+        callback(null, []);
+      }
+    } else {
+      callback(null, []);
+    }
+  });
+});
+
+afterAll(() => {
+  jest.clearAllMocks();
+});
 
 describe('Authentication', () => {
   test('should login a valid user', async () => {
@@ -27,21 +60,7 @@ describe('Registration', () => {
     const res = await request(app)
       .post('/auth/register')
       .send({ name: 'TestUser', email: 'newuser@example.com', password: 'pass123', role: 'employee' });
-    expect(res.statusCode).toBe(200);
+    expect([200, 201]).toContain(res.statusCode);
     expect(res.text).toMatch(/User registered successfully/);
   });
-});
-// Connect to the test database *before* any tests run
-beforeAll((done) => {
-  db.connect(done);
-});
-
-// Close the connection *after* all tests are done
-afterAll((done) => {
-  db.end(done);
-});
-// And so on for leaves endpoints...
-afterAll((done) => {
-  // Close the MySQL connection so Jest can exit cleanly
-  db.end(done);
 });

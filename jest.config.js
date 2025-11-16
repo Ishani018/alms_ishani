@@ -13,7 +13,18 @@ module.exports = {
 		'!**/dist/**',
 		'!**/build/**',
 		'!server.js', // exclude entry if not easily testable
+		'!**/tests/**', // exclude test files
+		'!**/public/**', // exclude public files
+		'!**/server/routes/admin.js', // exclude admin routes (MongoDB, not used)
 	],
+	coverageThreshold: {
+		global: {
+			statements: 75,
+			branches: 75,
+			functions: 75,
+			lines: 75
+		}
+	},
 	coverageDirectory: 'coverage',
 	coverageReporters: ['json', 'lcov', 'text', 'html'],
 };

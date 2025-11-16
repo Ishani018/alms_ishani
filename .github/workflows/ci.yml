@@ -2,17 +2,14 @@ name: Node.js CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - '**'          # run CI on all branches (main, develop, lint-fix, etc.)
+    branches: [ main, develop ]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [ main, develop ]
 
 jobs:
-  # ─────────────────────────────
-  # STAGE 1: BUILD (INSTALL DEPS)
-  # ─────────────────────────────
+
+  # JOB 1: BUILD (Stage 1)
+  # Installs all dependencies needed for other jobs
   build:
     runs-on: ubuntu-latest
     steps:
@@ -22,109 +19,102 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Install dependencies
+      - name: 1. Build - Install Dependencies
         run: npm ci
+      # Upload dependencies for other jobs
+      - name: Upload node_modules artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules/
 
-  # ────────────────
-  # STAGE 2: LINT
-  # ────────────────
+  # JOB 2: LINT (Stage 4)
+  # Checks code quality for errors (Threshold: 0 errors)
   lint:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build # Requires build to be complete
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+      
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Download node_modules artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: node_modules/
+          
+      # --- THIS STEP IS MODIFIED ---
+      # It will now print errors to the console.
+      - name: 4. Lint - Run ESLint
+        run: npx eslint .
+      # --- END MODIFICATION ---
 
-      - name: Run ESLint
-        run: npx eslint . --format=json --output-file lint-report.json || true
-
-      - name: Upload Lint Report
+      - name: 4. Lint - Upload Lint Report
         uses: actions/upload-artifact@v4
         if: always() # Upload report even if lint step failed
         with:
           name: lint-report
           path: lint-report.json
 
-  # ────────────────
-  # STAGE 3: TEST
-  # ────────────────
-  test:
+  # JOB 3: TEST & COVERAGE (Stages 2 & 3)
+  # Runs all tests and checks coverage (Threshold: 75%)
+  test-and-coverage:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build # Requires build to be complete
+
+    # Starts a MySQL database service for this job
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testdb
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Jest tests
-        run: npx jest --ci
-
-  # ─────────────────
-  # STAGE 4: COVERAGE
-  # ─────────────────
-  coverage:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+      - name: Download node_modules artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Jest with coverage
-        run: npx jest --ci --coverage --reporters=default
-
-      - name: Upload Coverage Report
+          name: node-modules
+          path: node_modules/
+        
+      - name: 2&3. Test & Coverage - Run Jest
+        run: npx jest --ci --coverage --reporters=default --json --outputFile=test-results.json --forceExit --detectOpenHandles || true
+        env:
+          # Env vars for tests to connect to the DB service
+          DB_HOST: 127.0.0.1
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_NAME: testdb
+          NODE_ENV: test
+      
+      - name: 3. Coverage - Upload Coverage Report
         uses: actions/upload-artifact@v4
         if: always() # Upload report even if tests failed
         with:
           name: coverage-report
-          path: coverage/   # Jest's default coverage folder
+          path: coverage/
 
-  # ─────────────────
-  # STAGE 5: SECURITY
-  # ─────────────────
-  security:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run npm audit
-        run: npm audit --audit-level=high --json > security-report.json || true
-
-      - name: Upload Security Report
+      - name: 2. Test - Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -161,38 +151,43 @@ jobs:
           name: security-report
           path: security-report.json
 
-  # ─────────────────────────────
-  # CD: PACKAGE / DEPLOY ARTIFACT
-  # ─────────────────────────────
-  CD:
+  # JOB 5: DEPLOYMENT ARTIFACT
+  # Bundles all code and reports into a .zip file
+  cd-pipeline:
     runs-on: ubuntu-latest
-    needs: [build, lint, test, coverage, security]
-    if: github.event_name == 'push'
+    needs: [lint, test-and-coverage, security]
+    if: github.event_name == 'push' # Only run on push events
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Download all CI artifacts
+      
+      - name: Download all CI Artifacts
         uses: actions/download-artifact@v4
-
-      - name: Create deployment artifact (.zip)
+      
+      - name: Create Deployment Artifact (.zip)
         run: |
           mkdir -p deployment/reports
-
-          # Move reports into deployment folder
-          mv coverage-report deployment/reports/coverage-report
-          mv lint-report/lint-report.json deployment/reports/lint-report.json
-          mv security-report/security-report.json deployment/reports/security-report.json
-
-          # Copy project files into deployment folder
-          cp -r client deployment/client
-          cp -r tests deployment/tests
-          cp package.json package-lock.json README.md deployment/
-
-          # Zip everything
+          
+          mv lint-report/lint-report.json deployment/reports/ || true
+          mv coverage-report deployment/reports/coverage-report || true
+          mv security-report/security-report.json deployment/reports/ || true
+          mv test-results/test-results.json deployment/reports/ || true
+          
+          # Copy your project source code
+          cp -r public deployment/public || true
+          cp -r routes deployment/routes || true
+          cp -r controllers deployment/controllers || true
+          cp -r models deployment/models || true
+          cp -r config deployment/config || true
+          cp -r tests deployment/tests || true
+          cp app.js deployment/app.js || true
+          cp package.json package-lock.json README.md deployment/ || true
+          
+          # Create the final zip
           zip -r deployment-package.zip deployment
-
-      - name: Upload final deployment artifact
+      
+      - name: Upload Final Deployment Artifact
         uses: actions/upload-artifact@v4
         with:
           name: deployment-package

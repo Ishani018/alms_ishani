@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Register New User</h1>
+  </header>
+  <div class="container">
+    <form id="registerForm" aria-label="Register Form">
+      <div class="form-group">
+        <label for="name">Name:</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          aria-label="Name"
+          required
+          minlength="2"
+          maxlength="40"
+          tabindex="1"
+        />
+      </div>
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          aria-label="Email"
+          required
+          tabindex="2"
+        />
+      </div>
+      <div class="form-group">
+        <label for="password">Set Password:</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          aria-label="Password"
+          required
+          minlength="6"
+          tabindex="3"
+        />
+      </div>
+      <div class="form-group">
+        <label for="role">Role:</label>
+        <select id="role" name="role" aria-label="Role" required tabindex="4">
+          <option value="">Select a role</option>
+          <option value="employee">Employee</option>
+          <option value="manager">Manager</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button
+        type="submit"
+        aria-label="Register"
+        tabindex="5"
+      >
+        Register
+      </button>
+    </form>
+    <div id="registerStatus" aria-live="polite" style="margin-top:1em;"></div>
+    <div id="loader" style="display:none; text-align:center; margin:1em;">
+      <span class="spinner" aria-live="polite" aria-busy="true"></span>
+    </div>
+  </div>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const role = document.getElementById('role').value;
+
+      const registerStatusDiv = document.getElementById('registerStatus');
+      if (!name || !email || !password || !role) {
+        registerStatusDiv.innerText = "Please fill all fields.";
+        registerStatusDiv.style.color = 'red';
+        return;
+      }
+
+      const loader = document.getElementById('loader');
+      loader.style.display = "block";
+      try {
+        const res = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, role })
+        });
+        const result = await res.text();
+        loader.style.display = "none";
+        if (res.ok) {
+          registerStatusDiv.style.color = 'green';
+          registerStatusDiv.innerText = result;
+          e.target.reset();
+        } else {
+          registerStatusDiv.style.color = 'red';
+          registerStatusDiv.innerText = result;
+        }
+      } catch (err) {
+        loader.style.display = "none";
+        registerStatusDiv.style.color = 'red';
+        registerStatusDiv.innerText = "Network or server error.";
+      }
+    });
+  </script>
+</body>
+</html>

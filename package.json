@@ -1,0 +1,31 @@
+{
+  "name": "alms_se",
+  "version": "1.0.0",
+  "description": "Automatic Leave Management System",
+  "main": "app.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon app.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.15.3",
+    "nodemailer": "^7.0.10"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
+  },
+  "author": "",
+  "license": "ISC",
+  "keywords": []
+}

@@ -1,6 +1,4 @@
 const request = require("supertest");
-const path = require("path");
-const fs = require("fs");
 
 // Mock database before requiring app
 jest.mock("../../config/db", () => ({

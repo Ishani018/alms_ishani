@@ -1,7 +1,6 @@
 const request = require("supertest");
 const app = require("../../app");
 const db = require("../../config/db");
-const jwt = require("jsonwebtoken");
 
 // Mock database and JWT
 jest.mock("../../config/db", () => ({

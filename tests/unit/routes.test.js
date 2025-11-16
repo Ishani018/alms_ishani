@@ -1,6 +1,3 @@
-const request = require("supertest");
-const express = require("express");
-
 describe("Routes – Unit Tests", () => {
   describe("authRoutes", () => {
     test("should export router", () => {

@@ -36,7 +36,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
@@ -47,19 +47,22 @@ jobs:
         with:
           name: node-modules
           path: node_modules/
-          
-      # --- THIS STEP IS MODIFIED ---
-      # It will now print errors to the console.
-      - name: 4. Lint - Run ESLint
-        run: npx eslint .
-      # --- END MODIFICATION ---
 
-      - name: 4. Lint - Upload Lint Report
+      - name: Prepare reports directory
+        run: mkdir -p reports
+
+      - name: 4. Lint - Run ESLint (console + reports)
+        run: |
+          npx eslint . --max-warnings=0 | tee reports/eslint.txt
+          # Create JSON report even if the above failed to help debugging
+          npx eslint . -f json -o reports/eslint.json || true
+
+      - name: 4. Lint - Upload Lint Reports
         uses: actions/upload-artifact@v4
         if: always() # Upload report even if lint step failed
         with:
           name: lint-report
-          path: lint-report.json
+          path: reports/
 
   # JOB 3: TEST & COVERAGE (Stages 2 & 3)
   # Runs all tests and checks coverage (Threshold: 75%)
@@ -169,9 +172,13 @@ jobs:
         run: |
           mkdir -p deployment/reports
           
-          mv lint-report/lint-report.json deployment/reports/ || true
+          # Move lint reports directory
+          mv lint-report deployment/reports/eslint-report || true
+          # Move coverage directory
           mv coverage-report deployment/reports/coverage-report || true
+          # Move security report json
           mv security-report/security-report.json deployment/reports/ || true
+          # Move test results json
           mv test-results/test-results.json deployment/reports/ || true
           
           # Copy your project source code

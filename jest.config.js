@@ -29,18 +29,4 @@ module.exports = {
 	},
 	coverageDirectory: 'coverage',
 	coverageReporters: ['json', 'lcov', 'text', 'html'],
-	// Generate test results in JUnit XML format for CI/CD
-	// Only use jest-junit if it's installed (for CI/CD environments)
-	reporters: process.env.CI ? [
-		'default',
-		['jest-junit', {
-			outputDirectory: 'test-results',
-			outputName: 'junit.xml',
-			suiteName: 'ALMS Test Suite',
-			classNameTemplate: '{classname}',
-			titleTemplate: '{title}',
-			ancestorSeparator: ' › ',
-			usePathForSuiteName: 'true'
-		}]
-	] : ['default'],
 };

@@ -77,25 +77,6 @@ jobs:
           mkdir -p coverage
         fi
     
-    - name: Check test results directory exists
-      run: |
-        if [ -d "test-results" ]; then
-          echo "Test results directory found"
-          ls -la test-results/
-        else
-          echo "Test results directory not found"
-          mkdir -p test-results
-        fi
-    
-    - name: Upload test reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results-${{ matrix.node-version }}
-        path: test-results/
-        retention-days: 30
-        if-no-files-found: ignore
-    
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
       if: always()

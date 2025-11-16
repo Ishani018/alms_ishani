@@ -16,28 +16,4 @@ module.exports = {
 	],
 	coverageDirectory: 'coverage',
 	coverageReporters: ['json', 'lcov', 'text', 'html'],
-	coverageThreshold: {
-		global: {
-			branches: 75,
-			functions: 75,
-			lines: 75,
-			statements: 75,
-		},
-	},
-};
-
-// jest.config.js
-module.exports = {
-  // ... other settings
-  collectCoverage: true,
-  coverageDirectory: "coverage",
-  
-  coverageThreshold: {
-    global: {
-      branches: 75,
-      functions: 75,
-      lines: 75,
-      statements: 75
-    },
-  },
 };

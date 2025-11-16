@@ -4,6 +4,8 @@ module.exports = {
 	testEnvironment: 'node',
 	// Look for JS test files
 	testMatch: ['**/__tests__/**/*.test.js', '**/?(*.)+(spec|test).js'],
+	// Setup file to mock mysql2 (runs after test framework, but mocks are hoisted)
+	setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
 	// Collect coverage for source files
 	collectCoverage: true,
 	collectCoverageFrom: [

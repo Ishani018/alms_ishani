@@ -8,4 +8,14 @@ const db = mysql.createConnection({
   database: process.env.DB_NAME || 'your_local_database_name'
 });
 
+// Handle connection errors gracefully (especially in test environments)
+db.on('error', (err) => {
+  // In test environment, ignore connection errors as we use mocks
+  if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
+    // Silently ignore connection errors in tests
+    return;
+  }
+  console.error('Database connection error:', err);
+});
+
 module.exports = db;

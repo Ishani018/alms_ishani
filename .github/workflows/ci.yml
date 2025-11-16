@@ -163,9 +163,26 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Download all CI Artifacts
+      - name: Download lint report artifact
         uses: actions/download-artifact@v4
+        with:
+          name: lint-report
+          path: lint-report
+      - name: Download coverage report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report
+      - name: Download security report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: security-report
+          path: security-report
+      - name: Download test results artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          path: test-results
       
       - name: Create Deployment Artifact (.zip)
         run: |

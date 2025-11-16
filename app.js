@@ -22,6 +22,4 @@ app.get('/', (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/leaves', leaveRoutes);
 app.use('/users', userRoutes);  // Mount user routes at /users path
-
-const PORT = 3000;
 module.exports = app;

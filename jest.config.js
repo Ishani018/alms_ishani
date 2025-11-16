@@ -1,9 +1,15 @@
 // jest.config.js
 module.exports = {
-  testMatch: [
-    "**/tests/**/*.test.js",
-    "**/tests/**/*.spec.js",
-  ],
-  testEnvironment: "node",
-  roots: ["<rootDir>/tests"], // 👈 ensures Jest starts in /tests
+  // ... other settings
+  collectCoverage: true,
+  coverageDirectory: "coverage",
+  
+  coverageThreshold: {
+    global: {
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75
+    },
+  },
 };

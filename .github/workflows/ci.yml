@@ -145,7 +145,6 @@ jobs:
     name: Continuous Deployment
     runs-on: ubuntu-latest
     needs: security
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
     environment:
       name: production
     
@@ -173,7 +172,19 @@ jobs:
     - name: Run final tests
       run: npm test
     
+    - name: Check if deployment should run
+      id: should-deploy
+      run: |
+        if [ "${{ github.event_name }}" == "push" ] && [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/develop" ]]; then
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+          echo "✓ Deployment will proceed"
+        else
+          echo "should_deploy=false" >> $GITHUB_OUTPUT
+          echo "⏭️  Deployment skipped (not a push to main/master/develop)"
+        fi
+    
     - name: Create deployment package
+      if: steps.should-deploy.outputs.should_deploy == 'true'
       run: |
         echo "Creating deployment package..."
         mkdir -p deploy
@@ -181,6 +192,7 @@ jobs:
         echo "✓ Deployment package created"
     
     - name: Upload deployment artifact
+      if: steps.should-deploy.outputs.should_deploy == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: deployment-package
@@ -188,7 +200,15 @@ jobs:
         retention-days: 7
     
     - name: Deployment notification
+      if: steps.should-deploy.outputs.should_deploy == 'true'
       run: |
         echo "🚀 Deployment completed successfully!"
         echo "Branch: ${{ github.ref }}"
         echo "Commit: ${{ github.sha }}"
+    
+    - name: Deployment skipped notification
+      if: steps.should-deploy.outputs.should_deploy == 'false'
+      run: |
+        echo "⏭️  Deployment stage completed (deployment skipped - only runs on pushes to main/master/develop)"
+        echo "Event: ${{ github.event_name }}"
+        echo "Ref: ${{ github.ref }}"

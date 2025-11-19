@@ -1,5 +1,3 @@
-const mysql = require('mysql2');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db'); // Make sure this points to your MySQL connection
 
@@ -33,7 +31,7 @@ exports.register = (req, res) => {
   db.query(
     'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
     [name, email, password, role],
-    (err, result) => {
+    (err) => {
       if (err) return res.status(500).send('Could not register');
       res.send('User registered successfully');
     }

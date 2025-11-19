@@ -1,18 +1,43 @@
-// jest.config.js
+/** @type {import('jest').Config} */
 module.exports = {
-  roots: ["<rootDir>/tests"],
-  testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
-  testEnvironment: "node",
-
-  collectCoverage: true,               // ✅ Generate coverage info
-  coverageDirectory: "coverage",       // Output folder (default is fine)
-  
-  coverageThreshold: {                 // ✅ Temporary threshold
-    global: {
-      branches: 15,                    // % of branch coverage
-      functions: 20,                   // % of functions covered
-      lines: 25,                       // % of lines covered
-      statements: 25                   // % of statements covered
-    },
-  },
+	// Use Node test environment for backend
+	testEnvironment: 'node',
+	// Look for JS test files
+	testMatch: ['**/__tests__/**/*.test.js', '**/?(*.)+(spec|test).js'],
+	// Setup file to mock mysql2 (runs after test framework, but mocks are hoisted)
+	setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+	// Collect coverage for source files
+	collectCoverage: true,
+	collectCoverageFrom: [
+		'**/*.js',
+		'!**/node_modules/**',
+		'!**/coverage/**',
+		'!**/dist/**',
+		'!**/build/**',
+		'!server.js', // exclude entry point
+		'!jest.config.js', // exclude Jest config file
+		'!**/*.config.js', // exclude all config files
+		'!**/*.config.mjs', // exclude all config files (ESM)
+		'!**/tests/**', // exclude test files
+		'!**/public/**', // exclude public files
+		'!**/server/routes/admin.js', // exclude admin routes (MongoDB, not used)
+	],
+	coverageThreshold: {
+		global: {
+			statements: 75,
+			branches: 75,
+			functions: 75,
+			lines: 75
+		},
+		// app.js is a configuration/setup file with inline route handlers
+		// Route logic is tested in route files, so we don't require function coverage here
+		'./app.js': {
+			statements: 75,
+			branches: 75,
+			functions: 0, // Inline route handlers don't count as functions
+			lines: 75
+		}
+	},
+	coverageDirectory: 'coverage',
+	coverageReporters: ['json', 'lcov', 'text', 'html'],
 };

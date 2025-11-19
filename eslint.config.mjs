@@ -12,6 +12,23 @@ export default [
         ...globals.jest, // ✅ Added Jest globals here
       },
     },
+    rules: {
+      // Allow unused variables in test files
+      "no-unused-vars": ["error", { 
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }]
+    }
+  },
+  {
+    // Test files can have unused variables (for mocking, etc.)
+    files: ["**/*.test.js", "**/tests/**/*.js"],
+    rules: {
+      "no-unused-vars": ["warn", { 
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }]
+    }
   },
   {
     ignores: [

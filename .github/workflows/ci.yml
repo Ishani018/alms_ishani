@@ -7,9 +7,9 @@ on:
     branches: [ main, master, develop ]
 
 jobs:
-  # Stage 1: Lint
-  lint:
-    name: Lint Code
+  # Stage 1: Build
+  build:
+    name: Build Verification
     runs-on: ubuntu-latest
     
     steps:
@@ -25,15 +25,18 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Run linter
-      run: npm run lint || echo "Linter completed with warnings"
-      continue-on-error: true
+    - name: Verify application loads
+      run: |
+        node -e "const app = require('./app'); console.log('✓ App loaded successfully');"
+    
+    - name: Build verification complete
+      run: echo "✓ Build verification passed"
 
   # Stage 2: Test and Coverage
   test-and-coverage:
     name: Test and Coverage
     runs-on: ubuntu-latest
-    needs: lint
+    needs: build
     
     strategy:
       matrix:
@@ -65,7 +68,14 @@ jobs:
         echo "DB_NAME=test" >> $GITHUB_ENV
     
     - name: Run tests with coverage
-      run: npm test -- --coverage || true
+      run: npm run test:coverage
+    
+    - name: Create test results directory
+      run: mkdir -p test-results
+    
+    - name: Generate test results JSON
+      run: |
+        npm test -- --json --outputFile=test-results/test-results.json || true
     
     - name: Check coverage directory exists
       run: |
@@ -85,10 +95,19 @@ jobs:
         path: coverage/
         retention-days: 30
         if-no-files-found: ignore
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.node-version }}
+        path: test-results/
+        retention-days: 30
+        if-no-files-found: ignore
 
-  # Stage 3: Build
-  build:
-    name: Build Verification
+  # Stage 3: Coverage Quality Gate
+  coverage-gate:
+    name: Coverage Quality Gate
     runs-on: ubuntu-latest
     needs: test-and-coverage
     
@@ -105,16 +124,53 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Verify application loads
-      run: |
-        node -e "const app = require('./app'); console.log('✓ App loaded successfully');"
+    - name: Download coverage artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: coverage-report-20.x
+        path: coverage/
     
-    - name: Build verification complete
-      run: echo "✓ Build verification passed"
+    - name: Check coverage threshold
+      run: |
+        if [ -f "coverage/coverage-final.json" ]; then
+          echo "Coverage report found"
+          node -e "
+            const fs = require('fs');
+            const coverage = JSON.parse(fs.readFileSync('coverage/coverage-final.json', 'utf8'));
+            const totals = Object.values(coverage).reduce((acc, file) => {
+              const s = file.s || {};
+              const b = file.b || {};
+              const f = file.f || {};
+              const l = file.l || {};
+              acc.statements.total += Object.keys(s).length;
+              acc.statements.covered += Object.values(s).filter(v => v > 0).length;
+              acc.branches.total += Object.keys(b).length;
+              acc.branches.covered += Object.values(b).filter(v => v.some(x => x > 0)).length;
+              acc.functions.total += Object.keys(f).length;
+              acc.functions.covered += Object.values(f).filter(v => v > 0).length;
+              acc.lines.total += Object.keys(l).length;
+              acc.lines.covered += Object.values(l).filter(v => v > 0).length;
+              return acc;
+            }, {statements: {total: 0, covered: 0}, branches: {total: 0, covered: 0}, functions: {total: 0, covered: 0}, lines: {total: 0, covered: 0}});
+            const thresholds = {statements: 75, branches: 75, functions: 75, lines: 75};
+            let failed = false;
+            for (const [key, threshold] of Object.entries(thresholds)) {
+              const pct = totals[key].total > 0 ? (totals[key].covered / totals[key].total * 100) : 100;
+              console.log(\`\${key}: \${pct.toFixed(2)}% (threshold: \${threshold}%)\`);
+              if (pct < threshold) {
+                console.error(\`❌ \${key} coverage \${pct.toFixed(2)}% is below threshold of \${threshold}%\`);
+                failed = true;
+              }
+            }
+            if (failed) process.exit(1);
+          "
+        else
+          echo "⚠️ Coverage report not found, skipping quality gate"
+        fi
 
-  # Stage 4: Security
-  security:
-    name: Security Audit
+  # Stage 4: Lint
+  lint:
+    name: Lint Code
     runs-on: ubuntu-latest
     needs: build
     
@@ -131,14 +187,71 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Run security audit
-      run: npm audit --audit-level=moderate || true
+    - name: Run linter
+      run: npm run lint
+    
+    - name: Generate lint JSON report
+      run: npm run lint:json
       continue-on-error: true
     
-    - name: Check for known vulnerabilities
+    - name: Upload lint reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: lint-reports
+        path: lint-report.json
+        retention-days: 30
+        if-no-files-found: ignore
+
+  # Stage 5: Security
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: [coverage-gate, lint]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run security audit
+      id: audit
       run: |
-        echo "Security audit completed"
-        echo "Review the output above for any vulnerabilities"
+        npm audit --audit-level=moderate --json > security-report.json || true
+        npm audit --audit-level=moderate > security-output.txt || true
+    
+    - name: Check for critical vulnerabilities
+      run: |
+        if [ -f "security-report.json" ]; then
+          CRITICAL=$(node -e "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('security-report.json')); console.log(r.metadata.vulnerabilities.critical || 0);")
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "❌ Critical vulnerabilities found: $CRITICAL"
+            exit 1
+          else
+            echo "✓ No critical vulnerabilities found"
+          fi
+        else
+          echo "⚠️ Security report not generated"
+        fi
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          security-report.json
+          security-output.txt
+        retention-days: 30
+        if-no-files-found: ignore
 
   # Stage 5: CD (Continuous Deployment)
   cd:
@@ -183,12 +296,36 @@ jobs:
           echo "⏭️  Deployment skipped (not a push to main/master/develop)"
         fi
     
+    - name: Download coverage artifact
+      if: steps.should-deploy.outputs.should_deploy == 'true'
+      uses: actions/download-artifact@v4
+      with:
+        name: coverage-report-20.x
+        path: deploy/reports/coverage/
+        if-no-files-found: ignore
+    
+    - name: Download lint reports
+      if: steps.should-deploy.outputs.should_deploy == 'true'
+      uses: actions/download-artifact@v4
+      with:
+        name: lint-reports
+        path: deploy/reports/lint/
+        if-no-files-found: ignore
+    
+    - name: Download security reports
+      if: steps.should-deploy.outputs.should_deploy == 'true'
+      uses: actions/download-artifact@v4
+      with:
+        name: security-reports
+        path: deploy/reports/security/
+        if-no-files-found: ignore
+    
     - name: Create deployment package
       if: steps.should-deploy.outputs.should_deploy == 'true'
       run: |
         echo "Creating deployment package..."
         mkdir -p deploy
-        cp -r app.js server.js config controllers models routes public package.json package-lock.json deploy/ 2>/dev/null || true
+        cp -r app.js server.js config controllers models routes public package.json package-lock.json README.md deploy/ 2>/dev/null || true
         echo "✓ Deployment package created"
     
     - name: Upload deployment artifact
